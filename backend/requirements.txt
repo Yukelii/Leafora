@@ -1,0 +1,12 @@
+# Runtime dependencies for the Leafora FastAPI backend.
+# Training dependencies live in requirements-training.txt.
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+pydantic>=2.7,<3.0
+python-multipart>=0.0.9
+pillow>=10.3
+numpy>=1.26,<3.0
+
+# ML runtime. TensorFlow ships as manylinux wheels for x86_64, which is what
+# Render (Docker) uses. Pinned to the version used for training.
+tensorflow-cpu>=2.16,<2.20

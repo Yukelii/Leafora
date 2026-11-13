@@ -1,0 +1,2098 @@
+#:import T theme
+#:import strftime time.strftime
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:set CREAM T.CREAM
+#:set MINT T.MINT
+#:set MINT_L T.MINT_L
+#:set DARK T.DARK
+#:set PINK T.PINK
+#:set PEACH T.PEACH
+#:set RED T.RED
+#:set MUTED T.MUTED
+
+# ------------------------------------------------------------------ basics
+<Txt@Label>:
+    color: DARK
+    halign: 'left'
+    valign: 'middle'
+    size_hint_y: None
+    text_size: self.width, None
+    height: self.texture_size[1]
+    font_size: sp(14)
+
+<H1@Txt>:
+    font_size: sp(26)
+    bold: True
+
+<H2@Txt>:
+    font_size: sp(17)
+    bold: True
+
+<Sm@Txt>:
+    font_size: sp(12.5)
+    color: MUTED
+
+<Row@BoxLayout>:
+    size_hint_y: None
+    height: self.minimum_height
+    spacing: dp(8)
+
+<Col@BoxLayout>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.minimum_height
+    spacing: dp(2)
+
+<Icon>:
+    size_hint: None, None
+    size: dp(28), dp(28)
+    font_size: sp(24)
+    color: DARK
+    canvas.before:
+        Color:
+            rgba: (1, 1, 1, 1) if self.tex else (1, 1, 1, 0)
+        Rectangle:
+            texture: self.tex
+            pos: self.pos
+            size: self.size
+
+<Card>:
+    orientation: 'vertical'
+    size_hint_y: None
+    height: self.fixed_height if self.fixed_height > 0 else self.minimum_height
+    padding: dp(14)
+    spacing: dp(8)
+    canvas.before:
+        Color:
+            rgba: self.edge_color
+        RoundedRectangle:
+            pos: self.x, self.y - dp(4)
+            size: self.size
+            radius: [self.radius]
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.radius]
+    canvas.after:
+        Color:
+            rgba: DARK if self.outline > 0 else (0, 0, 0, 0)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, min(self.radius, self.height / 2, self.width / 2))
+            width: max(self.outline, .01)
+
+<Circle>:
+    size_hint: None, None
+    size: dp(44), dp(44)
+    canvas.before:
+        Color:
+            rgba: self.bg_color
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<Pill>:
+    size_hint: None, None
+    size: self.texture_size[0] + dp(22), self.texture_size[1] + dp(10)
+    pos_hint: {'center_y': .5}
+    font_size: sp(12)
+    bold: True
+    color: DARK
+    canvas.before:
+        Color:
+            rgba: self.edge_color
+        RoundedRectangle:
+            pos: self.x, self.y - dp(2)
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+
+<Btn>:
+    size_hint_y: None
+    height: dp(56)
+    bold: True
+    font_size: sp(17)
+    color: DARK
+    opacity: .8 if self.state == 'down' else 1
+    canvas.before:
+        Color:
+            rgba: self.edge_color
+        RoundedRectangle:
+            pos: self.x, self.y - dp(4)
+            size: self.size
+            radius: [dp(22)]
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(22)]
+    canvas.after:
+        Color:
+            rgba: DARK if self.outline > 0 else (0, 0, 0, 0)
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, dp(22))
+            width: max(self.outline, .01)
+        Color:
+            rgba: (1, 1, 1, 1) if self.icon_tex else (1, 1, 1, 0)
+        Rectangle:
+            texture: self.icon_tex
+            pos: self.center_x - self.texture_size[0] / 2 - dp(30), self.center_y - dp(11)
+            size: dp(22), dp(22)
+
+<Bar>:
+    size_hint_y: None
+    height: dp(14)
+    canvas:
+        Color:
+            rgba: self.track
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: DARK
+        Line:
+            rounded_rectangle: (self.x, self.y, self.width, self.height, self.height / 2)
+            width: dp(1.2)
+        Color:
+            rgba: self.fill
+        RoundedRectangle:
+            pos: self.x + dp(2.5), self.y + dp(2.5)
+            size: max((self.width - dp(5)) * self.value, dp(9)), self.height - dp(5)
+            radius: [(self.height - dp(5)) / 2]
+
+<Chip>:
+    size_hint_y: None
+    height: dp(48)
+    font_size: sp(13)
+    color: DARK if self.state == 'down' else MUTED
+    bold: self.state == 'down'
+    halign: 'center'
+    valign: 'bottom' if self.icon_pos == 'top' else 'middle'
+    text_size: self.size
+    padding: [0, dp(8)] if self.icon_pos == 'top' else [dp(24), 0, 0, 0]
+    canvas.before:
+        Color:
+            rgba: DARK if self.state == 'down' else (0.45, 0.55, 0.50, .55)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(3)
+            size: self.size
+            radius: [dp(16)]
+        Color:
+            rgba: self.sel_color if self.state == 'down' else (0.89, 0.94, 0.90, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(16)]
+    canvas.after:
+        Color:
+            rgba: (1, 1, 1, 1) if self.icon_tex else (1, 1, 1, 0)
+        Rectangle:
+            texture: self.icon_tex
+            pos: (self.center_x - dp(12), self.top - dp(36)) if self.icon_pos == 'top' else (self.x + dp(10), self.center_y - dp(10))
+            size: (dp(24), dp(24)) if self.icon_pos == 'top' else (dp(20), dp(20))
+
+<Swatch>:
+    size_hint_y: None
+    height: dp(46)
+    canvas:
+        Color:
+            rgba: DARK
+        RoundedRectangle:
+            pos: self.x, self.y - dp(3)
+            size: self.size
+            radius: [dp(14)]
+        Color:
+            rgba: self.tint
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(14)]
+        Color:
+            rgba: (DARK if self.state == 'down' else (0, 0, 0, 0))
+        Line:
+            points: self.center_x - dp(8), self.center_y, self.center_x - dp(2), self.center_y - dp(6), self.center_x + dp(9), self.center_y + dp(7)
+            width: dp(2.2)
+
+<TabBtn>:
+    font_size: sp(13)
+    color: DARK
+    bold: self.state == 'down'
+    canvas.before:
+        Color:
+            rgba: MINT if self.state == 'down' else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(20)]
+
+# Guide rings + corner brackets over the camera. Drawn here (not in Python) so they
+# show immediately and always follow the camera box. Ring size: the 0.20 below.
+<GuideOverlay>:
+    canvas:
+        Color:
+            rgba: T.GUIDE
+        Line:
+            circle: (self.center_x, self.center_y, (min(self.size) * 0.20))
+            width: dp(2)
+        Line:
+            circle: (self.center_x, self.center_y, (min(self.size) * 0.20 * 0.47))
+            width: dp(1.2)
+            dash_length: dp(3)
+            dash_offset: dp(4)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * 1.0, self.center_y + (min(self.size) * 0.20 * 0.47) * 0.0, self.center_x + (min(self.size) * 0.20) * 1.0, self.center_y + (min(self.size) * 0.20) * 0.0]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * 0.7071, self.center_y + (min(self.size) * 0.20 * 0.47) * 0.7071, self.center_x + (min(self.size) * 0.20) * 0.7071, self.center_y + (min(self.size) * 0.20) * 0.7071]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * 0.0, self.center_y + (min(self.size) * 0.20 * 0.47) * 1.0, self.center_x + (min(self.size) * 0.20) * 0.0, self.center_y + (min(self.size) * 0.20) * 1.0]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * -0.7071, self.center_y + (min(self.size) * 0.20 * 0.47) * 0.7071, self.center_x + (min(self.size) * 0.20) * -0.7071, self.center_y + (min(self.size) * 0.20) * 0.7071]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * -1.0, self.center_y + (min(self.size) * 0.20 * 0.47) * 0.0, self.center_x + (min(self.size) * 0.20) * -1.0, self.center_y + (min(self.size) * 0.20) * 0.0]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * -0.7071, self.center_y + (min(self.size) * 0.20 * 0.47) * -0.7071, self.center_x + (min(self.size) * 0.20) * -0.7071, self.center_y + (min(self.size) * 0.20) * -0.7071]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * -0.0, self.center_y + (min(self.size) * 0.20 * 0.47) * -1.0, self.center_x + (min(self.size) * 0.20) * -0.0, self.center_y + (min(self.size) * 0.20) * -1.0]
+            width: dp(1.5)
+        Line:
+            points: [self.center_x + (min(self.size) * 0.20 * 0.47) * 0.7071, self.center_y + (min(self.size) * 0.20 * 0.47) * -0.7071, self.center_x + (min(self.size) * 0.20) * 0.7071, self.center_y + (min(self.size) * 0.20) * -0.7071]
+            width: dp(1.5)
+        Ellipse:
+            pos: self.center_x - dp(7), self.center_y - dp(7)
+            size: dp(14), dp(14)
+        Line:
+            points: [self.x + dp(12) + 1 * dp(28), self.top - dp(12), self.x + dp(12), self.top - dp(12), self.x + dp(12), self.top - dp(12) + -1 * dp(28)]
+            width: dp(3)
+        Line:
+            points: [self.right - dp(12) + -1 * dp(28), self.top - dp(12), self.right - dp(12), self.top - dp(12), self.right - dp(12), self.top - dp(12) + -1 * dp(28)]
+            width: dp(3)
+        Line:
+            points: [self.x + dp(12) + 1 * dp(28), self.y + dp(12), self.x + dp(12), self.y + dp(12), self.x + dp(12), self.y + dp(12) + 1 * dp(28)]
+            width: dp(3)
+        Line:
+            points: [self.right - dp(12) + -1 * dp(28), self.y + dp(12), self.right - dp(12), self.y + dp(12), self.right - dp(12), self.y + dp(12) + 1 * dp(28)]
+            width: dp(3)
+
+# Camera fills the whole rounded square (no green bars); corners stay rounded.
+<LeafCamera>:
+    canvas.before:
+        StencilPush
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(28)]
+        StencilUse
+    canvas.after:
+        StencilUnUse
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(28)]
+        StencilPop
+
+<ShutterButton>:
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, .45
+        Ellipse:
+            pos: self.x - dp(8), self.y - dp(8)
+            size: self.width + dp(16), self.height + dp(16)
+        Color:
+            rgba: DARK
+        Ellipse:
+            pos: self.x, self.y - dp(4)
+            size: self.size
+        Color:
+            rgba: T.PINK_L
+        Ellipse:
+            pos: self.pos
+            size: self.size
+    opacity: .8 if self.state == 'down' else 1
+    Icon:
+        name: 'camera'
+        font_size: sp(38)
+        size: dp(35), dp(35)
+        pos_hint: {'center_x': .5, 'center_y': .5}
+
+# ------------------------------------------------------------- shared bars
+<TopBar@BoxLayout>:
+    size_hint_y: None
+    height: dp(64)
+    padding: dp(16), dp(8)
+    spacing: dp(10)
+    Circle:
+        bg_color: MINT
+        Icon:
+            name: 'leaforaplanticon'
+            size: dp(30), dp(30)
+    Col:
+        pos_hint: {'center_y': .5}
+        H2:
+            text: 'Leafora'
+            font_size: sp(22)
+        Sm:
+            text: 'Garden Dashboard'
+    TapCircle:
+        bg_color: MINT_L
+        on_release: app.show_wip('Notifications')
+        Icon:
+            name: 'notification'
+            size: dp(26), dp(26)
+    TapCircle:
+        bg_color: .247, .49, .388, 1
+        on_release: app.show_wip('Profile')
+        Icon:
+            name: 'user'
+            size: dp(24), dp(24)
+            recolor: 1, 1, 1, 1
+
+<NavItem>:
+    orientation: 'vertical'
+    padding: dp(4)
+    spacing: dp(2)
+    canvas.before:
+        Color:
+            rgba: MINT if self.selected else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [dp(18)]
+    Icon:
+        name: root.icon
+        size: dp(28), dp(28)
+        pos_hint: {'center_x': .5}
+    Txt:
+        text: root.text
+        halign: 'center'
+        font_size: sp(12)
+        bold: root.selected
+
+<NavBar>:
+    size_hint_y: None
+    height: dp(72)
+    padding: dp(10), dp(6)
+    spacing: dp(6)
+    canvas.before:
+        Color:
+            rgba: CREAM
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    NavItem:
+        icon: 'garden'
+        text: 'Garden'
+        selected: root.active == 'garden'
+        on_release: app.go('garden')
+    NavItem:
+        icon: 'camera'
+        text: 'Scan'
+        selected: root.active == 'scan'
+        on_release: app.go('scan')
+    NavItem:
+        icon: 'history'
+        text: 'History'
+        selected: root.active == 'history'
+        on_release: app.go('history')
+    NavItem:
+        icon: 'settings'
+        text: 'Settings'
+        selected: root.active == 'settings'
+        on_release: app.show_wip('Settings')
+
+# =========================================================== 1. GARDEN
+<GardenScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+        ScrollView:
+            bar_width: 0
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(14), dp(4), dp(14), dp(20)
+                spacing: dp(16)
+                Row:
+                    padding: dp(6), 0
+                    Icon:
+                        name: 'leavesplot'
+                        size: dp(24), dp(24)
+                        pos_hint: {'center_y': .5}
+                    Sm:
+                        text: 'Plot A \u2022 Sunny Balcony'
+                        bold: True
+                        pos_hint: {'center_y': .5}
+                    Pill:
+                        text: 'IoT Node Live'
+                        bg_color: 0.84, 0.96, 0.90, 1
+                        padding: dp(14), 0, 0, 0
+                        size: self.texture_size[0] + dp(36), self.texture_size[1] + dp(12)
+                        canvas.after:
+                            Color:
+                                rgba: DARK
+                            Ellipse:
+                                pos: self.x + dp(12), self.center_y - dp(4)
+                                size: dp(8), dp(8)
+                Card:
+                    bg_color: MINT
+                    radius: dp(32)
+                    padding: dp(14)
+                    spacing: dp(12)
+                    Row:
+                        spacing: dp(10)
+                        Label:
+                            text: 'Good Morning!'
+                            bold: True
+                            font_size: sp(28)
+                            color: DARK
+                            size_hint: None, None
+                            size: self.texture_size
+                            pos_hint: {'center_y': .5}
+                        Circle:
+                            size: dp(34), dp(34)
+                            bg_color: PINK
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'bug'
+                                size: dp(15), dp(15)
+                        Widget:
+                    Row:
+                        height: dp(190)
+                        Card:
+                            fixed_height: dp(190)
+                            bg_color: MINT_L
+                            Col:
+                                spacing: dp(6)
+                                H2:
+                                    text: 'Weather'
+                                    font_size: sp(15)
+                                Pill:
+                                    text: app.weather_tag
+                                    bg_color: T.PILL_GRAY
+                            AnchorLayout:
+                                Col:
+                                    spacing: dp(4)
+                                    Icon:
+                                        name: app.weather_kind
+                                        size: dp(56), dp(56)
+                                        color: T.SUN
+                                        pos_hint: {'center_x': .5}
+                                    H1:
+                                        text: app.weather_temp
+                                        halign: 'center'
+                                        font_size: sp(24)
+                                    Sm:
+                                        text: app.weather_desc
+                                        halign: 'center'
+                            Widget:
+                                size_hint_y: None
+                                height: dp(10)
+                        Card:
+                            fixed_height: dp(190)
+                            bg_color: MINT_L
+                            Row:
+                                H2:
+                                    text: 'Vitals'
+                                    font_size: sp(15)
+                                Pill:
+                                    text: 'Good'
+                                    bg_color: MINT
+                            AnchorLayout:
+                                Row:
+                                    Col:
+                                        spacing: dp(4)
+                                        Icon:
+                                            name: 'moisture'
+                                            size: dp(40), dp(40)
+                                            pos_hint: {'center_x': .5}
+                                        H2:
+                                            text: '%d%%' % app.soil_moisture
+                                            halign: 'center'
+                                        Sm:
+                                            text: 'Moisture'
+                                            halign: 'center'
+                                    Col:
+                                        spacing: dp(4)
+                                        Icon:
+                                            name: 'hum'
+                                            size: dp(40), dp(40)
+                                            pos_hint: {'center_x': .5}
+                                        H2:
+                                            text: '%d\u00b0C' % app.sensor_temp
+                                            halign: 'center'
+                                        Sm:
+                                            text: '%d%% Hum' % app.humidity
+                                            halign: 'center'
+                            Bar:
+                                height: dp(14)
+                                value: app.soil_moisture / 100.
+                                fill: DARK
+                                track: 0.83, 0.94, 0.88, 1
+                    Card:
+                        bg_color: CREAM
+                        radius: dp(26)
+                        Row:
+                            Icon:
+                                name: 'monitoredplanticon'
+                                size: dp(30), dp(30)
+                                pos_hint: {'center_y': .5}
+                            H2:
+                                text: 'Monitored Plant'
+                                font_size: sp(20)
+                            Pill:
+                                text: 'Active Subject'
+                                bg_color: MINT_L
+                        Card:
+                            bg_color: MINT_L
+                            radius: dp(22)
+                            Row:
+                                spacing: dp(10)
+                                FloatLayout:
+                                    size_hint: None, None
+                                    size: dp(76), dp(76)
+                                    pos_hint: {'center_y': .5}
+                                    Circle:
+                                        size: dp(66), dp(66)
+                                        bg_color: 0.82, 0.94, 0.88, 1
+                                        pos_hint: {'center_x': .5, 'center_y': .5}
+                                        Icon:
+                                            name: 'cherrytomatoicon'
+                                            size: dp(42), dp(42)
+                                    Circle:
+                                        size: dp(26), dp(26)
+                                        bg_color: PINK
+                                        pos_hint: {'right': 1, 'top': 1}
+                                        Icon:
+                                            name: 'vitality'
+                                            size: dp(14), dp(14)
+                                Col:
+                                    pos_hint: {'center_y': .5}
+                                    H2:
+                                        text: 'Cherry Tomato'
+                                        font_size: sp(20)
+                                        shorten: True
+                                        shorten_from: 'right'
+                                    Sm:
+                                        text: 'Plot A \u2022 Solanum lycopersicum'
+                                        text_size: self.width, None
+                                        halign: 'left'
+                                    Sm:
+                                        text: 'Day 42 \u2022 Vegetative Stage'
+                                        bold: True
+                                        color: DARK
+                                Col:
+                                    size_hint_x: None
+                                    width: dp(84)
+                                    pos_hint: {'center_y': .5}
+                                    spacing: dp(6)
+                                    Pill:
+                                        text: 'Check\nAlert'
+                                        halign: 'center'
+                                        bg_color: PEACH
+                                        color: RED
+                                        pos_hint: {'center_x': .5}
+                                    Sm:
+                                        text: 'Live Monitored'
+                                        halign: 'center'
+                Card:
+                    bg_color: MINT_L
+                    radius: dp(32)
+                    padding: dp(14)
+                    spacing: dp(12)
+                    Row:
+                        spacing: dp(10)
+                        Circle:
+                            bg_color: PINK
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'centerleaficon'
+                                size: dp(35), dp(35)
+                        Col:
+                            pos_hint: {'center_y': .5}
+                            H2:
+                                text: 'We checked your tomato!'
+                            Sm:
+                                text: 'Diagnostic scan from Plot A node'
+                        Icon:
+                            name: 'close'
+                            pos_hint: {'top': 1}
+                    Card:
+                        bg_color: CREAM
+                        radius: dp(26)
+                        Icon:
+                            name: app.diagnosis_icon
+                            size: dp(140), dp(140)
+                            pos_hint: {'center_x': .5}
+                        Card:
+                            bg_color: PEACH
+                            radius: dp(18)
+                            padding: dp(10)
+                            AnchorLayout:
+                                size_hint_y: None
+                                height: dp(24)
+                                Row:
+                                    size_hint_x: None
+                                    width: dp(22) + dp(8) + dx_title.texture_size[0]
+                                    spacing: dp(8)
+                                    Icon:
+                                        name: 'warningicon'
+                                        size: dp(22), dp(22)
+                                        pos_hint: {'center_y': .5}
+                                    Label:
+                                        id: dx_title
+                                        text: app.diagnosis_title
+                                        bold: True
+                                        color: RED
+                                        font_size: sp(15)
+                                        size_hint: None, None
+                                        size: self.texture_size
+                                        pos_hint: {'center_y': .5}
+                        Row:
+                            Sm:
+                                text: 'Confidence Meter'
+                            Sm:
+                                text: '%d%% Match' % (app.diagnosis_conf * 100)
+                                halign: 'right'
+                                bold: True
+                        Bar:
+                            value: app.diagnosis_conf
+                            fill: MINT
+                            track: MINT_L
+                        Sm:
+                            text: '"We\'re %d%% sure! Don\'t fret, early treatment works wonders."' % (app.diagnosis_conf * 100)
+                    Card:
+                        bg_color: CREAM
+                        radius: dp(26)
+                        H2:
+                            text: 'Next Steps:'
+                            font_size: sp(15)
+                        Row:
+                            Circle:
+                                size: dp(22), dp(22)
+                                bg_color: 0.37, 0.61, 0.48, 1
+                                pos_hint: {'center_y': .5}
+                                Icon:
+                                    name: 'checkstep'
+                                    size: dp(13), dp(13)
+                                    recolor: 1, 1, 1, 1
+                            Txt:
+                                text: '1. Prune bottom affected leaves safely'
+                        Row:
+                            Circle:
+                                size: dp(22), dp(22)
+                                bg_color: 0.37, 0.61, 0.48, 1
+                                pos_hint: {'center_y': .5}
+                                Icon:
+                                    name: 'checkstep'
+                                    size: dp(13), dp(13)
+                                    recolor: 1, 1, 1, 1
+                            Txt:
+                                text: '2. Water only at soil base to avoid foliage dampness'
+                    Btn:
+                        text: 'I did it!'
+                        icon: 'didit'
+                        edge_color: 0, 0, 0, 0
+                        on_release: app.go('note_new')
+                Card:
+                    bg_color: 0.84, 0.96, 0.90, 1
+                    radius: dp(26)
+                    Row:
+                        spacing: dp(12)
+                        Circle:
+                            size: dp(56), dp(56)
+                            bg_color: MINT
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'sprouttip'
+                                size: dp(32), dp(32)
+                        Col:
+                            pos_hint: {'center_y': .5}
+                            H2:
+                                text: 'Sprout Tip:'
+                                font_size: sp(16)
+                            Sm:
+                                text: 'Optimal morning sunlight hours: 7:30 AM \u2013 10:30 AM'
+        NavBar:
+            active: 'garden'
+
+# =========================================================== 2. SCAN (camera)
+<ScanScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            bar_width: 0
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(14), dp(24), dp(14), dp(24)
+                spacing: dp(16)
+                Card:
+                    bg_color: MINT
+                    edge_color: DARK
+                    radius: dp(26)
+                    padding: dp(10)
+                    Row:
+                        spacing: dp(8)
+                        Card:
+                            bg_color: CREAM
+                            edge_color: DARK
+                            radius: dp(20)
+                            padding: dp(12), dp(8)
+                            spacing: dp(0)
+                            H1:
+                                text: 'Take a Picture!'
+                                font_size: sp(22)
+                            Sm:
+                                text: 'Align leaf within the guide rings'
+                        Circle:
+                            size: dp(54), dp(54)
+                            pos_hint: {'center_y': .5}
+                            bg_color: MINT_L
+                            Icon:
+                                name: 'takepicicon'
+                                size: dp(34), dp(34)
+                Card:
+                    bg_color: T.CAM_BG
+                    edge_color: DARK
+                    radius: dp(32)
+                    padding: dp(12)
+                    spacing: dp(10)
+                    Row:
+                        Pill:
+                            text: 'AI Focus: Ready'
+                            bg_color: T.PILL_GRAY
+                        Widget:
+                        Pill:
+                            text: '1.2x Macro'
+                            bg_color: T.PILL_GRAY
+                    FloatLayout:
+                        size_hint_y: None
+                        height: self.width
+                        canvas.before:
+                            Color:
+                                rgba: T.CAM_BLOB
+                            RoundedRectangle:
+                                pos: self.pos
+                                size: self.size
+                                radius: [dp(28)]
+                        LeafCamera:
+                            id: cam
+                            pos_hint: {'x': 0, 'y': 0}
+                        GuideOverlay:
+                            pos_hint: {'x': 0, 'y': 0}
+                        Txt:
+                            text: cam.status
+                            halign: 'center'
+                            color: 1, 1, 1, .85
+                            pos_hint: {'center_x': .5, 'center_y': .5}
+                        Button:
+                            # tap the box to open the camera (only when it is off)
+                            text: ''
+                            background_normal: ''
+                            background_color: 0, 0, 0, 0
+                            pos_hint: {'x': 0, 'y': 0}
+                            on_release: root.open_camera()
+                    Row:
+                        Txt:
+                            text: root.lux_text
+                            color: 1, 1, 1, 1
+                            font_size: sp(12.5)
+                            bold: True
+                        Txt:
+                            text: root.stability_text
+                            halign: 'right'
+                            color: 1, 1, 1, 1
+                            font_size: sp(12.5)
+                            bold: True
+                Card:
+                    bg_color: CREAM
+                    edge_color: DARK
+                    radius: dp(26)
+                    Row:
+                        spacing: dp(10)
+                        Circle:
+                            bg_color: MINT_L
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'centerleaficon'
+                                size: dp(26), dp(26)
+                        Col:
+                            pos_hint: {'center_y': .5}
+                            H2:
+                                text: root.tip_title
+                            Sm:
+                                text: root.tip_body
+                        Pill:
+                            text: root.badge
+                            bg_color: MINT
+                            edge_color: DARK
+                Card:
+                    bg_color: T.MINT_SOFT
+                    edge_color: DARK
+                    radius: dp(32)
+                    padding: dp(16)
+                    Row:
+                        height: dp(100)
+                        TapCard:
+                            size_hint: None, None
+                            size: dp(64), dp(72)
+                            fixed_height: dp(72)
+                            pos_hint: {'center_y': .5}
+                            bg_color: CREAM
+                            edge_color: DARK
+                            radius: dp(18)
+                            padding: dp(4)
+                            spacing: dp(0)
+                            Icon:
+                                name: 'auto'
+                                size: dp(28), dp(28)
+                                pos_hint: {'center_x': .5}
+                            Sm:
+                                text: 'Auto'
+                                halign: 'center'
+                        Widget:
+                        ShutterButton:
+                            size_hint: None, None
+                            size: dp(84), dp(84)
+                            pos_hint: {'center_y': .5}
+                            on_release: root.capture()
+                        Widget:
+                        TapCard:
+                            size_hint: None, None
+                            size: dp(64), dp(72)
+                            fixed_height: dp(72)
+                            pos_hint: {'center_y': .5}
+                            bg_color: CREAM
+                            edge_color: DARK
+                            radius: dp(18)
+                            padding: dp(4)
+                            spacing: dp(0)
+                            Icon:
+                                name: 'macro'
+                                size: dp(28), dp(28)
+                                pos_hint: {'center_x': .5}
+                            Sm:
+                                text: 'Macro'
+                                halign: 'center'
+                Card:
+                    bg_color: MINT_L
+                    edge_color: DARK
+                    radius: dp(22)
+                    Row:
+                        spacing: dp(10)
+                        Circle:
+                            size: dp(34), dp(34)
+                            bg_color: PEACH
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'gardentip'
+                                size: dp(22), dp(22)
+                        Txt:
+                            text: '[b]Gardener Tip:[/b] Avoid direct harsh noon shadows & keep your thumb clear of the camera lens for accurate pathology detection.'
+                            markup: True
+                TapCard:
+                    bg_color: CREAM
+                    edge_color: DARK
+                    radius: dp(22)
+                    on_release: app.go('history')
+                    Row:
+                        Icon:
+                            name: 'history'
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'Recent Scans'
+                        Txt:
+                            text: '[u]View Garden Log[/u] >'
+                            markup: True
+                            halign: 'right'
+                            bold: True
+        NavBar:
+            active: 'scan'
+
+# =========================================================== 3. HISTORY
+<HistoryScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+        ScrollView:
+            bar_width: 0
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(14), dp(4), dp(14), dp(24)
+                spacing: dp(16)
+                Card:
+                    bg_color: 0.84, 0.96, 0.90, 1
+                    edge_color: DARK
+                    outline: dp(1.2)
+                    radius: dp(30)
+                    padding: dp(16)
+                    spacing: dp(12)
+                    Row:
+                        spacing: dp(10)
+                        Col:
+                            pos_hint: {'center_y': .5}
+                            H1:
+                                text: 'Cherry Tomato'
+                                font_size: sp(24)
+                            Sm:
+                                text: 'Solanum lycopersicum \u2022 Day 42'
+                                italic: True
+                        Circle:
+                            size: dp(70), dp(70)
+                            bg_color: T.PINK_L
+                            Icon:
+                                name: 'cherrytomatoicon'
+                                size: dp(48), dp(48)
+                    Widget:
+                        size_hint_y: None
+                        height: dp(2)
+                        canvas:
+                            Color:
+                                rgba: MINT
+                            Rectangle:
+                                pos: self.pos
+                                size: self.size
+                    Row:
+                        spacing: dp(10)
+                        Card:
+                            bg_color: CREAM
+                            edge_color: DARK
+                            outline: dp(1.2)
+                            radius: dp(18)
+                            padding: dp(10), dp(12)
+                            Row:
+                                spacing: dp(8)
+                                Icon:
+                                    name: 'leavesplot'
+                                    size: dp(26), dp(26)
+                                    pos_hint: {'center_y': .5}
+                                Col:
+                                    pos_hint: {'center_y': .5}
+                                    Sm:
+                                        text: 'STAGE'
+                                    H2:
+                                        text: 'Vegetative'
+                                        font_size: sp(15)
+                        Card:
+                            bg_color: CREAM
+                            edge_color: DARK
+                            outline: dp(1.2)
+                            radius: dp(18)
+                            padding: dp(10), dp(12)
+                            Row:
+                                spacing: dp(8)
+                                Icon:
+                                    name: 'vitality'
+                                    size: dp(26), dp(26)
+                                    pos_hint: {'center_y': .5}
+                                Col:
+                                    pos_hint: {'center_y': .5}
+                                    Sm:
+                                        text: 'VITALITY'
+                                    H2:
+                                        text: '92%  (+7%)'
+                                        font_size: sp(15)
+                    Card:
+                        bg_color: CREAM
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(24)
+                        padding: dp(4)
+                        Row:
+                            height: dp(42)
+                            spacing: dp(2)
+                            TabBtn:
+                                text: '7 Days'
+                                group: 'range'
+                                state: 'down'
+                            TabBtn:
+                                text: '14 Days'
+                                group: 'range'
+                            TabBtn:
+                                text: '30 Days'
+                                group: 'range'
+                            TabBtn:
+                                text: 'All-Time'
+                                group: 'range'
+                Card:
+                    bg_color: CREAM
+                    edge_color: DARK
+                    outline: dp(1.2)
+                    radius: dp(30)
+                    padding: dp(16)
+                    spacing: dp(10)
+                    Row:
+                        Circle:
+                            size: dp(38), dp(38)
+                            bg_color: MINT
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'healthvitalitytrack'
+                                size: dp(22), dp(22)
+                        H2:
+                            text: 'Health & Vitality Track'
+                            font_size: sp(18)
+                        Pill:
+                            text: 'D36 - D41'
+                            bg_color: MINT_L
+                            edge_color: DARK
+                    Sm:
+                        text: 'Daily pathology and biological vigor readings from smart scans.'
+                    Card:
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(20)
+                        padding: dp(8)
+                        VitalityChart:
+                            id: chart
+                            size_hint_y: None
+                            height: dp(150)
+                        Row:
+                            spacing: 0
+                            Sm:
+                                text: 'D36'
+                                halign: 'center'
+                            Sm:
+                                text: 'D38'
+                                halign: 'center'
+                            Sm:
+                                text: 'D40'
+                                halign: 'center'
+                                color: RED
+                                bold: True
+                            Sm:
+                                text: 'D41'
+                                halign: 'center'
+                            Sm:
+                                text: 'Today'
+                                halign: 'center'
+                    Card:
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(20)
+                        padding: dp(12), dp(10)
+                        Row:
+                            spacing: dp(10)
+                            Col:
+                                Sm:
+                                    text: 'Avg Soil Moisture'
+                                H2:
+                                    text: '68%  Optimal'
+                                    font_size: sp(15)
+                            Widget:
+                                size_hint: None, None
+                                size: dp(2), dp(40)
+                                pos_hint: {'center_y': .5}
+                                canvas:
+                                    Color:
+                                        rgba: MINT
+                                    Rectangle:
+                                        pos: self.pos
+                                        size: self.size
+                            Col:
+                                Sm:
+                                    text: 'Balcony Temp'
+                                H2:
+                                    text: '23\u00b0C  Flux \u00b13\u00b0'
+                                    font_size: sp(15)
+                Card:
+                    bg_color: CREAM
+                    edge_color: DARK
+                    outline: dp(1.2)
+                    radius: dp(30)
+                    padding: dp(16)
+                    spacing: dp(12)
+                    Row:
+                        Icon:
+                            name: 'book'
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'What Happened'
+                            font_size: sp(20)
+                        Sm:
+                            id: event_count
+                            text: ''
+                            halign: 'right'
+                    BoxLayout:
+                        id: timeline
+                        orientation: 'vertical'
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(14)
+                        canvas.before:
+                            Color:
+                                rgba: T.PILL_GRAY
+                            Rectangle:
+                                pos: self.x + dp(16), self.y
+                                size: dp(4), self.height
+                Btn:
+                    text: 'Add Care Note or Photo'
+                    bg_color: PINK
+                    outline: dp(1.2)
+                    on_release: app.go('note_new')
+                Btn:
+                    text: 'Export Health Report (PDF)'
+                    on_release: app.show_wip('PDF export')
+                    bg_color: CREAM
+                    outline: dp(1.2)
+        NavBar:
+            active: 'history'
+
+<TagPill>:
+    size_hint: None, None
+    height: dp(28)
+    width: self.minimum_width
+    padding: dp(10), 0
+    spacing: dp(5)
+    canvas.before:
+        Color:
+            rgba: self.edge_color
+        RoundedRectangle:
+            pos: self.x, self.y - dp(2)
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: self.bg_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+    Icon:
+        name: root.icon
+        size: dp(16), dp(16)
+        pos_hint: {'center_y': .5}
+    Label:
+        text: root.text
+        font_size: sp(12)
+        bold: True
+        color: DARK
+        size_hint: None, None
+        size: self.texture_size
+        pos_hint: {'center_y': .5}
+
+<EventRow>:
+    size_hint_y: None
+    height: self.minimum_height + dp(4)
+    spacing: dp(8)
+    Circle:
+        size: dp(38), dp(38)
+        pos_hint: {'top': 1}
+        bg_color: root.dot
+        canvas.after:
+            Color:
+                rgba: DARK
+            Line:
+                circle: (self.center_x, self.center_y, self.width / 2 - dp(.6))
+                width: dp(1.2)
+        Icon:
+            name: root.icon
+            size: dp(22), dp(22)
+            font_size: sp(20)
+    TapCard:
+        bg_color: root.bg
+        edge_color: DARK
+        outline: dp(1.2)
+        radius: dp(20)
+        padding: dp(12)
+        spacing: dp(4)
+        on_release: app.go('note_detail')
+        Row:
+            Sm:
+                text: root.when
+                color: RED
+                bold: True
+                font_size: sp(11.5)
+            Pill:
+                text: root.tag
+                font_size: sp(11)
+                bg_color: CREAM
+                edge_color: DARK
+        H2:
+            text: root.title
+            font_size: sp(16)
+        Sm:
+            text: root.body
+
+# =========================================================== 4. NEW CARE NOTE
+<NoteNewScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+        ScrollView:
+            bar_width: 0
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(14), dp(4), dp(14), dp(24)
+                spacing: dp(14)
+                Row:
+                    height: dp(64)
+                    TapCard:
+                        size_hint: None, None
+                        size: dp(48), dp(48)
+                        pos_hint: {'center_y': .5}
+                        radius: dp(24)
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        padding: dp(10)
+                        on_release: app.go('history')
+                        Icon:
+                            name: 'close'
+                    Col:
+                        pos_hint: {'center_y': .5}
+                        spacing: dp(4)
+                        H2:
+                            text: 'New Care Note'
+                            halign: 'center'
+                            font_size: sp(22)
+                        Pill:
+                            text: 'Cherry Tomato \u2022 Day 42'
+                            bg_color: MINT_L
+                            edge_color: DARK
+                            pos_hint: {'center_x': .5}
+                    Card:
+                        size_hint: None, None
+                        size: dp(48), dp(48)
+                        pos_hint: {'center_y': .5}
+                        radius: dp(24)
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        padding: dp(10)
+                        Icon:
+                            name: 'bulb'
+                Row:
+                    height: dp(24)
+                    spacing: dp(6)
+                    padding: dp(6), 0
+                    Icon:
+                        name: 'eye'
+                        size: dp(20), dp(20)
+                        pos_hint: {'center_y': .5}
+                    Sm:
+                        text: 'LIVE TIMELINE PREVIEW'
+                        bold: True
+                        pos_hint: {'center_y': .5}
+                Card:
+                    bg_color: root.hue
+                    edge_color: DARK
+                    radius: dp(30)
+                    padding: dp(14)
+                    spacing: dp(10)
+                    Row:
+                        spacing: dp(10)
+                        Circle:
+                            size: dp(48), dp(48)
+                            bg_color: CREAM
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'scissors'
+                        Col:
+                            pos_hint: {'center_y': .5}
+                            H2:
+                                text: 'Pruning & Trim' if root.activity == 'Pruning' else root.activity
+                            Sm:
+                                text: 'Today \u2022 ' + strftime('%I:%M %p')
+                                color: DARK
+                        Pill:
+                            text: root.tag
+                            bg_color: CREAM
+                            edge_color: DARK
+                    Card:
+                        bg_color: 0.94, 0.96, 0.93, 1
+                        edge_color: DARK
+                        radius: dp(20)
+                        padding: dp(14)
+                        H1:
+                            text: title_in.text or 'Your headline'
+                            font_size: sp(22)
+                        Txt:
+                            text: body_in.text or 'Describe what you did...'
+                            color: MUTED
+                    Card:
+                        bg_color: 0.84, 0.91, 0.86, 1
+                        edge_color: DARK
+                        radius: dp(18)
+                        padding: dp(8)
+                        Row:
+                            spacing: dp(10)
+                            Image:
+                                source: app.last_photo
+                                size_hint: None, None
+                                size: (dp(52), dp(44)) if app.last_photo else (0, 0)
+                                fit_mode: 'cover'
+                                pos_hint: {'center_y': .5}
+                            Col:
+                                pos_hint: {'center_y': .5}
+                                Sm:
+                                    text: app.last_photo.replace('\\', '/').split('/')[-1] if app.last_photo else 'No photo attached yet'
+                                    color: DARK
+                                Sm:
+                                    text: '1 photo attached \u2022 High res' if app.last_photo else ''
+                Card:
+                    bg_color: MINT_L
+                    edge_color: DARK
+                    radius: dp(30)
+                    padding: dp(16)
+                    spacing: dp(12)
+                    Row:
+                        spacing: dp(8)
+                        Icon:
+                            name: 'palette'
+                            size: dp(24), dp(24)
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'Card Hue Style'
+                            font_size: sp(15)
+                        Sm:
+                            text: 'Mint Fresh'
+                            halign: 'right'
+                    Row:
+                        spacing: dp(10)
+                        Swatch:
+                            tint: MINT
+                            group: 'hue'
+                            state: 'down'
+                            on_state: if self.state == 'down': root.hue = self.tint
+                        Swatch:
+                            tint: .94, .73, .75, 1
+                            group: 'hue'
+                            on_state: if self.state == 'down': root.hue = self.tint
+                        Swatch:
+                            tint: .97, .91, .6, 1
+                            group: 'hue'
+                            on_state: if self.state == 'down': root.hue = self.tint
+                        Swatch:
+                            tint: .9, .86, .98, 1
+                            group: 'hue'
+                            on_state: if self.state == 'down': root.hue = self.tint
+                        Swatch:
+                            tint: .76, .9, .97, 1
+                            group: 'hue'
+                            on_state: if self.state == 'down': root.hue = self.tint
+                    Row:
+                        spacing: dp(8)
+                        Icon:
+                            name: 'activitycategory'
+                            size: dp(24), dp(24)
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'Activity & Category'
+                            font_size: sp(15)
+                    GridLayout:
+                        cols: 3
+                        size_hint_y: None
+                        height: self.minimum_height
+                        row_default_height: dp(66)
+                        row_force_default: True
+                        spacing: dp(10), dp(14)
+                        Chip:
+                            text: 'Pruning'
+                            icon: 'pruning'
+                            sel_color: CREAM
+                            group: 'activity'
+                            state: 'down'
+                            on_state: if self.state == 'down': root.activity = self.text
+                        Chip:
+                            text: 'Watering'
+                            icon: 'watering'
+                            sel_color: CREAM
+                            group: 'activity'
+                            on_state: if self.state == 'down': root.activity = self.text
+                        Chip:
+                            text: 'Fertilizer'
+                            icon: 'fertilizer'
+                            sel_color: CREAM
+                            group: 'activity'
+                            on_state: if self.state == 'down': root.activity = self.text
+                        Chip:
+                            text: 'Inspect'
+                            icon: 'inspect'
+                            sel_color: CREAM
+                            group: 'activity'
+                            on_state: if self.state == 'down': root.activity = self.text
+                        Chip:
+                            text: 'Sunlight'
+                            icon: 'sunlight'
+                            sel_color: CREAM
+                            group: 'activity'
+                            on_state: if self.state == 'down': root.activity = self.text
+                        Chip:
+                            text: 'Journal'
+                            icon: 'journal'
+                            sel_color: CREAM
+                            group: 'activity'
+                            on_state: if self.state == 'down': root.activity = self.text
+                    Row:
+                        spacing: dp(8)
+                        Icon:
+                            name: 'stickertag'
+                            size: dp(24), dp(24)
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'Sticker Tag'
+                            font_size: sp(15)
+                        Btn:
+                            text: 'Add Tag'
+                            icon: 'addtag'
+                            on_release: app.show_wip('Add Tag')
+                            size_hint: None, None
+                            size: dp(104), dp(44)
+                            pos_hint: {'center_y': .5}
+                            bg_color: 0, 0, 0, 0
+                            edge_color: 0, 0, 0, 0
+                            font_size: sp(13)
+                    Row:
+                        height: dp(48)
+                        spacing: dp(8)
+                        Chip:
+                            text: 'Gardener Care'
+                            icon: 'gardenercare'
+                            icon_pos: 'left'
+                            size_hint_x: 1.45
+                            group: 'tag'
+                            state: 'down'
+                            on_state: if self.state == 'down': root.tag = self.text
+                        Chip:
+                            text: 'Milestone'
+                            icon: 'milestone'
+                            icon_pos: 'left'
+                            group: 'tag'
+                            on_state: if self.state == 'down': root.tag = self.text
+                        Chip:
+                            text: 'IoT Check'
+                            icon: 'iotcheck'
+                            icon_pos: 'left'
+                            group: 'tag'
+                            on_state: if self.state == 'down': root.tag = self.text
+                Row:
+                    padding: dp(6), 0
+                    H2:
+                        text: 'Note Title'
+                        font_size: sp(15)
+                    Sm:
+                        text: 'Concise headline'
+                        halign: 'right'
+                Card:
+                    bg_color: MINT_L
+                    edge_color: DARK
+                    radius: dp(18)
+                    padding: dp(4)
+                    TextInput:
+                        id: title_in
+                        text: 'Trimmed lower yellow shoots'
+                        multiline: False
+                        size_hint_y: None
+                        height: dp(46)
+                        font_size: sp(16)
+                        padding: dp(10), dp(13)
+                        background_normal: ''
+                        background_active: ''
+                        background_color: 0, 0, 0, 0
+                        foreground_color: DARK
+                        cursor_color: DARK
+                Row:
+                    padding: dp(6), 0
+                    H2:
+                        text: 'Care Details & Observation'
+                        font_size: sp(15)
+                    Sm:
+                        text: 'Microclimate & Vigor'
+                        halign: 'right'
+                Card:
+                    bg_color: MINT_L
+                    edge_color: DARK
+                    radius: dp(18)
+                    padding: dp(4)
+                    TextInput:
+                        id: body_in
+                        text: 'Pruned off 3 bottom suckers that were touching the soil. Soil looks nicely aerated and early cluster blossoms look happy!'
+                        size_hint_y: None
+                        height: dp(130)
+                        font_size: sp(15)
+                        padding: dp(10), dp(12)
+                        background_normal: ''
+                        background_active: ''
+                        background_color: 0, 0, 0, 0
+                        foreground_color: DARK
+                        cursor_color: DARK
+                Row:
+                    padding: dp(6), 0
+                    H2:
+                        text: 'Plant Photo'
+                        font_size: sp(15)
+                    Sm:
+                        text: 'Recommended for AI Log'
+                        halign: 'right'
+                        color: DARK
+                Row:
+                    height: dp(124)
+                    spacing: dp(10)
+                    TapCard:
+                        fixed_height: dp(124)
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        radius: dp(20)
+                        padding: dp(10)
+                        spacing: dp(4)
+                        on_release: app.go('scan')
+                        Circle:
+                            size: dp(48), dp(48)
+                            bg_color: MINT
+                            pos_hint: {'center_x': .5}
+                            Icon:
+                                name: 'photo'
+                                size: dp(28), dp(28)
+                        Sm:
+                            text: 'Snap / Upload'
+                            halign: 'center'
+                            color: DARK
+                        Sm:
+                            text: 'JPG or PNG'
+                            halign: 'center'
+                    Card:
+                        fixed_height: dp(124)
+                        bg_color: T.MINT_SOFT
+                        edge_color: DARK
+                        radius: dp(20)
+                        padding: dp(0)
+                        FloatLayout:
+                            canvas.before:
+                                StencilPush
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(20)]
+                                StencilUse
+                            canvas.after:
+                                StencilUnUse
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(20)]
+                                StencilPop
+                            Image:
+                                source: app.last_photo
+                                fit_mode: 'cover'
+                                pos_hint: {'x': 0, 'y': 0}
+                            Label:
+                                text: app.last_photo.replace('\\', '/').split('/')[-1] if app.last_photo else 'No photo yet'
+                                color: (1, 1, 1, 1) if app.last_photo else MUTED
+                                font_size: sp(12)
+                                bold: True
+                                size_hint: None, None
+                                size: self.texture_size
+                                pos: self.parent.x + dp(10), self.parent.y + dp(10)
+                            TapCard:
+                                size_hint: None, None
+                                size: dp(44), dp(44)
+                                radius: dp(22)
+                                padding: dp(6)
+                                pos: self.parent.right - dp(48), self.parent.y + dp(8)
+                                opacity: 1 if app.last_photo else 0
+                                disabled: not app.last_photo
+                                on_release: app.last_photo = ''
+                                Icon:
+                                    name: 'trash'
+                                    size: dp(18), dp(18)
+                Card:
+                    bg_color: PEACH
+                    edge_color: DARK
+                    radius: dp(26)
+                    Row:
+                        spacing: dp(10)
+                        Circle:
+                            size: dp(46), dp(46)
+                            bg_color: CREAM
+                            pos_hint: {'center_y': .5}
+                            Icon:
+                                name: 'thermo'
+                                size: dp(26), dp(26)
+                                color: RED
+                        Col:
+                            pos_hint: {'center_y': .5}
+                            Row:
+                                spacing: dp(6)
+                                H2:
+                                    text: 'Auto-Stamped Climate Telemetry'
+                                    font_size: sp(14)
+                                Icon:
+                                    name: 'check'
+                                    size: dp(18), dp(18)
+                                    pos_hint: {'center_y': .5}
+                            Sm:
+                                text: '24.2\u00b0C \u2022 58% RH \u2022 VPD 1.05 kPa recorded from Plot A sensor'
+                Btn:
+                    text: 'Save Care Note'
+                    icon: 'savecare'
+                    font_size: sp(19)
+                    bg_color: PINK
+                    on_release: root.save()
+                Row:
+                    spacing: dp(12)
+                    Btn:
+                        text: 'Save Draft'
+                        icon: 'savedraft'
+                        bg_color: CREAM
+                        outline: dp(1.2)
+                        font_size: sp(15)
+                        on_release: app.go('history')
+                    Btn:
+                        text: 'Cancel'
+                        icon: 'cancel'
+                        bg_color: CREAM
+                        outline: dp(1.2)
+                        font_size: sp(15)
+                        on_release: app.go('history')
+        NavBar:
+            active: 'history'
+
+# =========================================================== 5. NOTE DETAIL
+<NoteDetailScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            bar_width: 0
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(14), dp(24), dp(14), dp(24)
+                spacing: dp(16)
+                Row:
+                    height: dp(60)
+                    TapCard:
+                        size_hint: None, None
+                        size: dp(44), dp(44)
+                        pos_hint: {'center_y': .5}
+                        radius: dp(22)
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        padding: dp(8)
+                        on_release: app.go('history')
+                        Icon:
+                            name: 'back'
+                            size: dp(20), dp(20)
+                    Col:
+                        pos_hint: {'center_y': .5}
+                        spacing: dp(4)
+                        H2:
+                            text: 'Note Detail'
+                            font_size: sp(24)
+                        Pill:
+                            text: 'Cherry Tomato \u2022 Balcony Plot A'
+                            font_size: sp(11)
+                            bg_color: MINT_L
+                            edge_color: DARK
+                            padding: dp(14), 0, 0, 0
+                            size: self.texture_size[0] + dp(34), self.texture_size[1] + dp(10)
+                            pos_hint: {'x': 0}
+                            canvas.after:
+                                Color:
+                                    rgba: 0.37, 0.61, 0.48, 1
+                                Ellipse:
+                                    pos: self.x + dp(11), self.center_y - dp(3.5)
+                                    size: dp(7), dp(7)
+                    Card:
+                        size_hint: None, None
+                        size: dp(36), dp(36)
+                        pos_hint: {'center_y': .5}
+                        radius: dp(18)
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        bg_color: MINT_L
+                        padding: dp(8)
+                        Icon:
+                            name: 'pen'
+                            size: dp(20), dp(20)
+                    Card:
+                        size_hint: None, None
+                        size: dp(36), dp(36)
+                        pos_hint: {'center_y': .5}
+                        radius: dp(18)
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        padding: dp(8)
+                        Icon:
+                            name: 'dots'
+                            size: dp(20), dp(20)
+                Card:
+                    bg_color: MINT
+                    edge_color: DARK
+                    outline: dp(1.2)
+                    radius: dp(30)
+                    Row:
+                        spacing: dp(8)
+                        TagPill:
+                            text: 'Care Action'
+                            icon: 'scissors'
+                            bg_color: CREAM
+                        TagPill:
+                            text: 'Milestone'
+                            icon: 'milestone'
+                            bg_color: PINK
+                        Widget:
+                    Sm:
+                        text: 'Yesterday \u2022 04:30 PM (Day 41)'
+                        color: DARK
+                        bold: True
+                    H1:
+                        text: 'Pruned & Bottom Watered'
+                        font_size: sp(23)
+                    Card:
+                        bg_color: CREAM
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(20)
+                        Txt:
+                            text: 'Clipped 3 infected lower foliage shoots showing early concentric ring marks and placed sub-irrigation tray to keep foliage dry. Cleaned shears with 70% isopropyl alcohol afterwards to stop cross-spore spread!'
+                            font_size: sp(15)
+                        Widget:
+                            size_hint_y: None
+                            height: dp(2)
+                            canvas:
+                                Color:
+                                    rgba: 0.36, 0.45, 0.40, .5
+                                Line:
+                                    points: [self.x, self.center_y, self.right, self.center_y]
+                                    dash_length: dp(3)
+                                    dash_offset: dp(3)
+                                    width: dp(1)
+                        Row:
+                            spacing: dp(10)
+                            Circle:
+                                size: dp(40), dp(40)
+                                bg_color: MINT_L
+                                pos_hint: {'center_y': .5}
+                                canvas.after:
+                                    Color:
+                                        rgba: DARK
+                                    Line:
+                                        circle: (self.center_x, self.center_y, self.width / 2 - dp(.6))
+                                        width: dp(1.2)
+                                Icon:
+                                    name: 'gardentip'
+                                    size: dp(24), dp(24)
+                            Sm:
+                                text: 'Gardener Tip: Keeping leaves dry prevents 90% of fungal re-infection.'
+                                pos_hint: {'center_y': .5}
+                Row:
+                    padding: dp(4), 0
+                    spacing: dp(8)
+                    Icon:
+                        name: 'photosattach'
+                        size: dp(17), dp(17)
+                        pos_hint: {'center_y': .5}
+                    H2:
+                        text: 'Attached Photos (2)'
+                        font_size: sp(18)
+                Row:
+                    height: dp(170)
+                    spacing: dp(12)
+                    Card:
+                        fixed_height: dp(170)
+                        bg_color: CREAM
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(20)
+                        padding: 0
+                        spacing: 0
+                        FloatLayout:
+                            canvas.before:
+                                StencilPush
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(20)]
+                                StencilUse
+                                Color:
+                                    rgba: T.MINT_SOFT
+                                Rectangle:
+                                    pos: self.x, self.y + self.height * .26
+                                    size: self.width, self.height * .74
+                            canvas.after:
+                                StencilUnUse
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(20)]
+                                StencilPop
+                            Image:
+                                source: ''   # e.g. 'assets/day41_clean_cut.jpg'
+                                fit_mode: 'cover'
+                                size_hint: 1, .74
+                                pos_hint: {'x': 0, 'top': 1}
+                            Pill:
+                                text: 'After Pruning'
+                                bg_color: CREAM
+                                pos_hint: {'right': .96, 'top': .95}
+                            Sm:
+                                text: 'day41_clean_cut.jpg'
+                                color: DARK
+                                size_hint_x: .88
+                                pos_hint: {'x': .06, 'y': .05}
+                    Card:
+                        fixed_height: dp(170)
+                        bg_color: CREAM
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(20)
+                        padding: 0
+                        spacing: 0
+                        FloatLayout:
+                            canvas.before:
+                                StencilPush
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(20)]
+                                StencilUse
+                                Color:
+                                    rgba: T.MINT_SOFT
+                                Rectangle:
+                                    pos: self.x, self.y + self.height * .26
+                                    size: self.width, self.height * .74
+                            canvas.after:
+                                StencilUnUse
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(20)]
+                                StencilPop
+                            Image:
+                                source: ''   # e.g. 'assets/tray_irrigation.jpg'
+                                fit_mode: 'cover'
+                                size_hint: 1, .74
+                                pos_hint: {'x': 0, 'top': 1}
+                            Pill:
+                                text: 'Tray Setup'
+                                bg_color: CREAM
+                                pos_hint: {'right': .96, 'top': .95}
+                            Sm:
+                                text: 'tray_irrigation.jpg'
+                                color: DARK
+                                size_hint_x: .88
+                                pos_hint: {'x': .06, 'y': .05}
+                Card:
+                    bg_color: MINT_L
+                    edge_color: DARK
+                    outline: dp(1.2)
+                    radius: dp(28)
+                    padding: dp(14)
+                    spacing: dp(10)
+                    Row:
+                        spacing: dp(8)
+                        Icon:
+                            name: 'antenna'
+                            size: dp(26), dp(26)
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'Plot A Telemetry Snapshot'
+                            font_size: sp(16)
+                        Pill:
+                            text: 'Auto-logged'
+                            bg_color: MINT
+                            edge_color: DARK
+                            padding: dp(14), 0, 0, 0
+                            size: self.texture_size[0] + dp(34), self.texture_size[1] + dp(10)
+                            canvas.after:
+                                Color:
+                                    rgba: DARK
+                                Ellipse:
+                                    pos: self.x + dp(11), self.center_y - dp(3.5)
+                                    size: dp(7), dp(7)
+                    Row:
+                        spacing: dp(8)
+                        Card:
+                            fixed_height: dp(104)
+                            edge_color: DARK
+                            outline: dp(1.2)
+                            radius: dp(18)
+                            padding: dp(8)
+                            spacing: dp(2)
+                            Icon:
+                                name: 'optimal'
+                                size: dp(26), dp(26)
+                                pos_hint: {'center_x': .5}
+                            H2:
+                                text: '23.4\u00b0'
+                                halign: 'center'
+                            Sm:
+                                text: 'Optimal'
+                                halign: 'center'
+                        Card:
+                            fixed_height: dp(104)
+                            edge_color: DARK
+                            outline: dp(1.2)
+                            radius: dp(18)
+                            padding: dp(8)
+                            spacing: dp(2)
+                            Icon:
+                                name: 'drop'
+                                size: dp(26), dp(26)
+                                pos_hint: {'center_x': .5}
+                            H2:
+                                text: '62%'
+                                halign: 'center'
+                            Sm:
+                                text: '-28% Drop'
+                                halign: 'center'
+                        Card:
+                            fixed_height: dp(104)
+                            edge_color: DARK
+                            outline: dp(1.2)
+                            radius: dp(18)
+                            padding: dp(8)
+                            spacing: dp(2)
+                            Icon:
+                                name: 'targetwet'
+                                size: dp(26), dp(26)
+                                pos_hint: {'center_x': .5}
+                            H2:
+                                text: '68%'
+                                halign: 'center'
+                            Sm:
+                                text: 'Target Wet'
+                                halign: 'center'
+                    Card:
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(18)
+                        padding: dp(10)
+                        Row:
+                            spacing: dp(10)
+                            Circle:
+                                size: dp(22), dp(22)
+                                bg_color: 0.37, 0.61, 0.48, 1
+                                pos_hint: {'center_y': .5}
+                                Icon:
+                                    name: 'checkstep'
+                                    size: dp(13), dp(13)
+                                    recolor: 1, 1, 1, 1
+                            Txt:
+                                text: 'Microclimate stabilized. Foliage dryness restored within safe threshold.'
+                                font_size: sp(13)
+                                pos_hint: {'center_y': .5}
+                Card:
+                    bg_color: PEACH
+                    edge_color: DARK
+                    outline: dp(1.2)
+                    radius: dp(28)
+                    padding: dp(14)
+                    spacing: dp(10)
+                    Row:
+                        spacing: dp(8)
+                        Icon:
+                            name: 'pathogen'
+                            size: dp(15), dp(15)
+                            pos_hint: {'center_y': .5}
+                        H2:
+                            text: 'Pathogen Recovery'
+                            font_size: sp(16)
+                        Sm:
+                            text: 'Associated Diagnosis'
+                            halign: 'right'
+                            color: RED
+                    Card:
+                        edge_color: DARK
+                        outline: dp(1.2)
+                        radius: dp(18)
+                        padding: dp(12)
+                        spacing: dp(6)
+                        Row:
+                            H2:
+                                text: 'Early Blight (Day 40 Check)'
+                                font_size: sp(13)
+                            Sm:
+                                text: '+7% Vitality'
+                                halign: 'right'
+                                color: RED
+                        Bar:
+                            height: dp(14)
+                            value: .78
+                            fill: 0.24, 0.42, 0.34, 1
+                            track: MINT_L
+                        Row:
+                            Sm:
+                                text: 'Status: Controlled'
+                            Sm:
+                                text: '78% Overall Recovery'
+                                halign: 'right'
+                                color: RED
+                                bold: True
+                Btn:
+                    text: 'Add Follow-up Observation'
+                    icon: 'addfollowup'
+                    bg_color: PINK
+                    outline: dp(1.2)
+                    on_release: app.go('note_new')
+                Btn:
+                    text: 'Share & Export Care Slip'
+                    icon: 'sharecare'
+                    on_release: app.show_wip('Share')
+                    bg_color: CREAM
+                    outline: dp(1.2)
+
+# ============================================================ work in progress
+<WipScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: dp(24)
+        spacing: dp(16)
+        Widget:
+        H1:
+            text: 'Work in progress'
+            halign: 'center'
+        Txt:
+            text: root.feature + ' is not built yet.'
+            halign: 'center'
+        Btn:
+            text: 'Back to Garden'
+            size_hint: None, None
+            size: dp(200), dp(48)
+            pos_hint: {'center_x': .5}
+            bg_color: MINT
+            on_release: app.go('garden')
+        Widget:
+
+# ===================================================================== root
+<RootSM>:
+    transition: FadeTransition(duration=0.2)
+
+RootSM:
+    GardenScreen:
+        name: 'garden'
+    ScanScreen:
+        name: 'scan'
+    HistoryScreen:
+        name: 'history'
+    NoteNewScreen:
+        name: 'note_new'
+    NoteDetailScreen:
+        name: 'note_detail'
+    WipScreen:
+        name: 'wip'

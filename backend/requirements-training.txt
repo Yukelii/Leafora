@@ -1,0 +1,4 @@
+# Dependencies for reproducing the notebook training locally.
+-r requirements.txt
+scikit-learn>=1.4
+matplotlib>=3.8

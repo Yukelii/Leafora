@@ -1,0 +1,51 @@
+# Python virtual environments
+venv/
+.venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage/
+
+# Node and build output
+node_modules/
+dist/
+build/
+.next/
+.nuxt/
+.vite/
+
+# Environment files and secrets (the example file is kept)
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Local databases and runtime data
+*.db
+*.sqlite3
+
+# Editor and IDE settings
+.idea/
+.vscode/
+*.swp
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Documentation: all Markdown files and the docs folders
+*.md
+*.markdown
+docs/
+Docs/

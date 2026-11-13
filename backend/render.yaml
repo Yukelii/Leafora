@@ -1,0 +1,24 @@
+# Render blueprint for the Leafora backend.
+# PROPOSED until it has actually been deployed and used for a real prediction.
+services:
+  - type: web
+    name: leafora-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: MODEL_PATH
+        value: /app/models/exported/leafora_densenet121_field.keras
+      - key: CLASS_NAMES_PATH
+        value: /app/app/ml/class_names.json
+      - key: MODEL_VERSION
+        value: leafora-densenet121-v1
+      - key: LOG_LEVEL
+        value: INFO
+      - key: SENSOR_HISTORY_LIMIT
+        value: "200"
+      # Add the real origins here once the front end has a stable URL.
+      - key: CORS_ORIGINS
+        value: http://localhost:5173,http://localhost:3000
