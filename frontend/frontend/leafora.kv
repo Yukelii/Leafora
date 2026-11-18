@@ -194,7 +194,7 @@
 
 <Chip>:
     size_hint_y: None
-    height: dp(66) if self.icon_pos == 'top' else dp(48)
+    height: dp(66) if self.icon_pos == 'top' else dp(40)
     font_size: sp(13)
     color: DARK if self.state == 'down' else (.27, .37, .32, 1)
     bold: self.state == 'down'
@@ -208,25 +208,25 @@
         RoundedRectangle:
             pos: self.x, self.y - dp(5)
             size: self.size
-            radius: [dp(16)]
+            radius: [self.height / 2] if self.icon_pos == 'left' else [dp(16)]
         Color:
             rgba: .16, .24, .20, .17
         RoundedRectangle:
             pos: self.x, self.y - dp(3.5)
             size: self.size
-            radius: [dp(16)]
+            radius: [self.height / 2] if self.icon_pos == 'left' else [dp(16)]
         Color:
             rgba: .16, .24, .20, .23
         RoundedRectangle:
             pos: self.x, self.y - dp(2)
             size: self.size
-            radius: [dp(16)]
+            radius: [self.height / 2] if self.icon_pos == 'left' else [dp(16)]
         Color:
             rgba: self.sel_color if self.state == 'down' else (.80, .90, .84, 1)
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [dp(16)]
+            radius: [self.height / 2] if self.icon_pos == 'left' else [dp(16)]
     canvas.after:
         Color:
             rgba: ((1, 1, 1, 1) if self.state == 'down' else (1, 1, 1, .88)) if self.icon_tex else (1, 1, 1, 0)
@@ -254,8 +254,8 @@
         Color:
             rgba: (DARK if self.state == 'down' else (0, 0, 0, 0))
         Line:
-            points: self.center_x - dp(8), self.center_y, self.center_x - dp(2), self.center_y - dp(6), self.center_x + dp(9), self.center_y + dp(7)
-            width: dp(2.2)
+            points: self.center_x - dp(5.5), self.center_y, self.center_x - dp(1.5), self.center_y - dp(4.5), self.center_x + dp(6), self.center_y + dp(4.5)
+            width: dp(1.8)
 
 <TabBtn>:
     font_size: sp(13)
@@ -816,8 +816,8 @@
                             bg_color: T.PILL_GRAY
                         Widget:
                         Pill:
-                            text: '1.2x Macro'
-                            bg_color: T.PILL_GRAY
+                            text: '1.2x Macro' if root.macro else '1.0x Standard'
+                            bg_color: T.MINT if root.macro else T.PILL_GRAY
                     FloatLayout:
                         size_hint_y: None
                         height: self.width
@@ -833,6 +833,18 @@
                             pos_hint: {'x': 0, 'y': 0}
                         GuideOverlay:
                             pos_hint: {'x': 0, 'y': 0}
+                        Widget:
+                            # white flash used when the device has no flashlight (PC webcam)
+                            id: flash_fx
+                            opacity: 0
+                            pos_hint: {'x': 0, 'y': 0}
+                            canvas:
+                                Color:
+                                    rgba: 1, 1, 1, 1
+                                RoundedRectangle:
+                                    pos: self.pos
+                                    size: self.size
+                                    radius: [dp(28)]
                         Txt:
                             text: cam.status
                             halign: 'center'
@@ -891,18 +903,21 @@
                             size: dp(64), dp(72)
                             fixed_height: dp(72)
                             pos_hint: {'center_y': .5}
-                            bg_color: CREAM
+                            bg_color: MINT if root.flash_mode == 'on' else CREAM
                             edge_color: DARK
                             radius: dp(18)
                             padding: dp(4)
                             spacing: dp(0)
+                            on_release: root.cycle_flash()
+                            Widget:
                             Icon:
-                                name: 'auto'
+                                name: {'auto': 'auto', 'on': 'flash_on', 'off': 'flash_off'}[root.flash_mode]
                                 size: dp(28), dp(28)
                                 pos_hint: {'center_x': .5}
                             Sm:
-                                text: 'Auto'
+                                text: {'auto': 'Auto', 'on': 'On', 'off': 'Off'}[root.flash_mode]
                                 halign: 'center'
+                            Widget:
                         Widget:
                         ShutterButton:
                             size_hint: None, None
@@ -915,11 +930,13 @@
                             size: dp(64), dp(72)
                             fixed_height: dp(72)
                             pos_hint: {'center_y': .5}
-                            bg_color: CREAM
+                            bg_color: MINT if root.macro else CREAM
                             edge_color: DARK
                             radius: dp(18)
                             padding: dp(4)
                             spacing: dp(0)
+                            on_release: root.toggle_macro()
+                            Widget:
                             Icon:
                                 name: 'macro'
                                 size: dp(28), dp(28)
@@ -927,6 +944,7 @@
                             Sm:
                                 text: 'Macro'
                                 halign: 'center'
+                            Widget:
                 Card:
                     bg_color: MINT_L
                     edge_color: DARK
@@ -1509,11 +1527,12 @@
                             icon: 'addtag'
                             on_release: app.show_wip('Add Tag')
                             size_hint: None, None
-                            size: dp(104), dp(44)
+                            size: dp(112), dp(44)
                             pos_hint: {'center_y': .5}
                             bg_color: 0, 0, 0, 0
                             edge_color: 0, 0, 0, 0
-                            font_size: sp(13)
+                            color: .247, .42, .34, 1
+                            font_size: sp(13.5)
                     Row:
                         height: dp(48)
                         spacing: dp(8)
@@ -1521,6 +1540,7 @@
                             text: 'Gardener Care'
                             icon: 'gardenercare'
                             icon_pos: 'left'
+                            pos_hint: {'center_y': .5}
                             size_hint_x: 1.45
                             group: 'tag'
                             state: 'down'
@@ -1529,12 +1549,14 @@
                             text: 'Milestone'
                             icon: 'milestone'
                             icon_pos: 'left'
+                            pos_hint: {'center_y': .5}
                             group: 'tag'
                             on_state: if self.state == 'down': root.tag = self.text
                         Chip:
                             text: 'IoT Check'
                             icon: 'iotcheck'
                             icon_pos: 'left'
+                            pos_hint: {'center_y': .5}
                             group: 'tag'
                             on_state: if self.state == 'down': root.tag = self.text
                 Row:

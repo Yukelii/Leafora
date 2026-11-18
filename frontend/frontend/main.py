@@ -14,7 +14,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
 from kivy.core.window import Window
-from kivy.graphics import Color, Ellipse, Line, PopMatrix, PushMatrix, Rotate
+from kivy.graphics import Color, Ellipse, Line, PopMatrix, PushMatrix, Rotate, Scale
 from kivy.graphics.texture import Texture
 from kivy.metrics import dp
 from kivy.properties import (BooleanProperty, ColorProperty, ListProperty,
@@ -304,6 +304,8 @@ class LeafCamera(FloatLayout):
     Android : Kivy's Camera widget.
     """
     status = StringProperty('Tap here to open the camera')
+    zoom = NumericProperty(1.0)      # 1.0 = normal, 1.2 = macro (closer crop)
+    _scale = None
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -324,6 +326,64 @@ class LeafCamera(FloatLayout):
         if USE_CV:
             return self._ev is not None or self._opening
         return self.cam is not None and bool(self.cam.play)
+
+    # ------------------------------------------------------- flash / macro / light
+    def on_zoom(self, inst, value):
+        if self._scale is not None:            # android preview
+            self._scale.x = self._scale.y = value
+
+    def set_macro(self, on):
+        """Macro = 1.2x closer crop (preview + saved photo) and close-focus where supported."""
+        self.zoom = 1.2 if on else 1.0
+        if on:
+            return self._set_android_mode('focus', 'macro', ('auto',))
+        return self._set_android_mode('focus', 'continuous-picture', ('auto',))
+
+    def set_torch(self, on):
+        """Phone flashlight. Returns False when there is no flash (desktop webcams)."""
+        return self._set_android_mode('flash', 'torch' if on else 'off')
+
+    def brightness(self):
+        """Average brightness 0-255 of the live picture, or None when unknown."""
+        try:
+            if USE_CV:
+                return float(self._frame.mean()) if self._frame is not None else None
+            if self.cam is None or self.cam.texture is None:
+                return None
+            sample = self.cam.texture.pixels[::997]          # cheap sample of RGBA bytes
+            rgb = [b for i, b in enumerate(sample) if i % 4 != 3]
+            return sum(rgb) / len(rgb) if rgb else None
+        except Exception:
+            return None
+
+    def _android_cam(self):
+        """The raw android.hardware.Camera behind Kivy's Camera widget (or None)."""
+        try:
+            return self.cam._camera._android_camera
+        except Exception:
+            return None
+
+    def _set_android_mode(self, kind, wanted, fallbacks=()):
+        cam = self._android_cam()
+        if cam is None:
+            return False
+        try:
+            params = cam.getParameters()
+            supported = (params.getSupportedFlashModes() if kind == 'flash'
+                         else params.getSupportedFocusModes())
+            if supported is None:
+                return False
+            for mode in (wanted,) + tuple(fallbacks):
+                if supported.contains(mode):
+                    if kind == 'flash':
+                        params.setFlashMode(mode)
+                    else:
+                        params.setFocusMode(mode)
+                    cam.setParameters(params)
+                    return True
+        except Exception as exc:
+            print('CAMERA PARAM ERROR:', exc)
+        return False
 
     # ------------------------------------------------------------ public API
     def start(self):
@@ -360,6 +420,11 @@ class LeafCamera(FloatLayout):
         try:
             from PIL import Image
             img = Image.open(base + '.png').convert('RGB')
+            if self.zoom > 1.01:                       # macro: keep the same area you saw
+                w, h = img.size
+                cw, ch = int(w / self.zoom), int(h / self.zoom)
+                left, top = (w - cw) // 2, (h - ch) // 2
+                img = img.crop((left, top, left + cw, top + ch))
             if CAMERA_ROTATION:
                 img = img.rotate(CAMERA_ROTATION, expand=True)
             img.save(base + '.jpg', quality=88)
@@ -416,6 +481,11 @@ class LeafCamera(FloatLayout):
             if self._misses > 90:                 # ~3 seconds of nothing
                 self.status = 'Webcam opened but sends no frames.\nIs another app using it?'
             return
+        if self.zoom > 1.01:                              # macro: centre crop
+            fh, fw = frame.shape[:2]
+            ch, cw = int(fh / self.zoom), int(fw / self.zoom)
+            y0, x0 = (fh - ch) // 2, (fw - cw) // 2
+            frame = frame[y0:y0 + ch, x0:x0 + cw].copy()
         h, w = frame.shape[:2]
         self._frame = frame
         if self._tex is None or self._tex.size != (w, h):
@@ -450,6 +520,7 @@ class LeafCamera(FloatLayout):
         with self.cam.canvas.before:
             PushMatrix()
             self._rot = Rotate(angle=CAMERA_ROTATION)
+            self._scale = Scale(self.zoom, self.zoom, 1)
         with self.cam.canvas.after:
             PopMatrix()
         self.add_widget(self.cam)
@@ -475,11 +546,22 @@ class LeafCamera(FloatLayout):
         self.cam.size = (self.height, self.width) if CAMERA_ROTATION % 180 else self.size
         self.cam.center = self.center
         self._rot.origin = self.cam.center
+        if self._scale is not None:
+            self._scale.origin = self.cam.center
 
 
 # ==================================================================== screens
 class GardenScreen(Screen):
     pass
+
+
+FLASH_ORDER = ('auto', 'on', 'off')
+FLASH_TIPS = {                      # mode -> (title, body, badge)
+    'auto': ('Flash: Auto', 'Light fires only when the leaf is too dark.', 'Auto'),
+    'on': ('Flash: On', 'Light fires with every photo.', 'On'),
+    'off': ('Flash: Off', 'No light. Use natural daylight.', 'Off'),
+}
+DARK_BRIGHTNESS = 70                # Auto flash fires below this (0-255)
 
 
 class ScanScreen(Screen):
@@ -489,6 +571,8 @@ class ScanScreen(Screen):
     lux_text = StringProperty('Natural Light: 780 Lux')       # hook up a sensor later
     stability_text = StringProperty('Stability: 96%')
     busy = BooleanProperty(False)
+    flash_mode = StringProperty('auto')      # 'auto' | 'on' | 'off'
+    macro = BooleanProperty(False)
 
     def on_leave(self, *a):
         self.ids.cam.stop()
@@ -502,15 +586,63 @@ class ScanScreen(Screen):
     def _tip(self, title, body, badge):
         self.tip_title, self.tip_body, self.badge = title, body, badge
 
+    # ---------------------------------------------------------- flash / macro
+    def cycle_flash(self):
+        """Tap the flash button: Auto -> On -> Off -> Auto."""
+        i = FLASH_ORDER.index(self.flash_mode)
+        self.flash_mode = FLASH_ORDER[(i + 1) % len(FLASH_ORDER)]
+        self._tip(*FLASH_TIPS[self.flash_mode])
+
+    def toggle_macro(self):
+        """Tap the macro button: closer 1.2x crop + close focus."""
+        self.macro = not self.macro
+        self.ids.cam.set_macro(self.macro)
+        if self.macro:
+            self._tip('Macro: On', 'Close-up mode. Hold 2-4 inches from the leaf.', 'Macro')
+        else:
+            self._tip('Macro: Off', 'Normal distance. Hold 4-6 inches from the plant.', 'Ready')
+
+    def _wants_flash(self, cam):
+        if self.flash_mode == 'on':
+            return True
+        if self.flash_mode == 'auto':
+            level = cam.brightness()
+            return level is not None and level < DARK_BRIGHTNESS
+        return False
+
+    def _screen_flash(self):
+        """No flash hardware (PC webcam): flash the camera box white instead."""
+        fx = self.ids.flash_fx
+        Animation.cancel_all(fx, 'opacity')
+        (Animation(opacity=.9, d=.08) + Animation(opacity=.9, d=.2)
+         + Animation(opacity=0, d=.3)).start(fx)
+
+    # ------------------------------------------------------------------ capture
     def capture(self):
         if self.busy:
             return
-        if not self.ids.cam.is_on:
+        cam = self.ids.cam
+        if not cam.is_on:
             self._tip('Camera is off', 'Tap the camera box to open it first.', 'Off')
             return
+        if self._wants_flash(cam):
+            self.busy = True
+            self._tip('Flash!', 'Hold still...', 'Busy')
+            lit = cam.set_torch(True)            # real flashlight on phones
+            if not lit:
+                self._screen_flash()             # PC webcam fallback
+            Clock.schedule_once(lambda dt: self._take(True), .5 if lit else .3)
+        else:
+            self._take(False)
+
+    def _take(self, flashed):
         app = App.get_running_app()
-        path = self.ids.cam.capture(app.scan_dir)
+        cam = self.ids.cam
+        path = cam.capture(app.scan_dir)
+        if flashed:
+            cam.set_torch(False)
         if not path:
+            self.busy = False
             self._tip('Camera not ready', 'Allow camera access, then try again.', 'Wait')
             return
         app.last_photo = path
