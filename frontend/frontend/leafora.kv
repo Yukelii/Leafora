@@ -64,9 +64,21 @@
     spacing: dp(8)
     canvas.before:
         Color:
-            rgba: self.edge_color
+            rgba: (.16, .24, .20, .11) if self.edge_color[3] > 0 else (0, 0, 0, 0)
         RoundedRectangle:
-            pos: self.x, self.y - dp(4)
+            pos: self.x, self.y - dp(5)
+            size: self.size
+            radius: [self.radius]
+        Color:
+            rgba: (.16, .24, .20, .17) if self.edge_color[3] > 0 else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(3.5)
+            size: self.size
+            radius: [self.radius]
+        Color:
+            rgba: (.16, .24, .20, .23) if self.edge_color[3] > 0 else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(2)
             size: self.size
             radius: [self.radius]
         Color:
@@ -122,9 +134,21 @@
     opacity: .8 if self.state == 'down' else 1
     canvas.before:
         Color:
-            rgba: self.edge_color
+            rgba: (.16, .24, .20, .11) if self.edge_color[3] > 0 else (0, 0, 0, 0)
         RoundedRectangle:
-            pos: self.x, self.y - dp(4)
+            pos: self.x, self.y - dp(5)
+            size: self.size
+            radius: [dp(22)]
+        Color:
+            rgba: (.16, .24, .20, .17) if self.edge_color[3] > 0 else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(3.5)
+            size: self.size
+            radius: [dp(22)]
+        Color:
+            rgba: (.16, .24, .20, .23) if self.edge_color[3] > 0 else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(2)
             size: self.size
             radius: [dp(22)]
         Color:
@@ -170,34 +194,46 @@
 
 <Chip>:
     size_hint_y: None
-    height: dp(48)
+    height: dp(66) if self.icon_pos == 'top' else dp(48)
     font_size: sp(13)
-    color: DARK if self.state == 'down' else MUTED
+    color: DARK if self.state == 'down' else (.27, .37, .32, 1)
     bold: self.state == 'down'
     halign: 'center'
     valign: 'bottom' if self.icon_pos == 'top' else 'middle'
     text_size: self.size
-    padding: [0, dp(8)] if self.icon_pos == 'top' else [dp(24), 0, 0, 0]
+    padding: [0, dp(9)] if self.icon_pos == 'top' else [dp(24), 0, 0, 0]
     canvas.before:
         Color:
-            rgba: DARK if self.state == 'down' else (0.45, 0.55, 0.50, .55)
+            rgba: .16, .24, .20, .11
         RoundedRectangle:
-            pos: self.x, self.y - dp(3)
+            pos: self.x, self.y - dp(5)
             size: self.size
             radius: [dp(16)]
         Color:
-            rgba: self.sel_color if self.state == 'down' else (0.89, 0.94, 0.90, 1)
+            rgba: .16, .24, .20, .17
+        RoundedRectangle:
+            pos: self.x, self.y - dp(3.5)
+            size: self.size
+            radius: [dp(16)]
+        Color:
+            rgba: .16, .24, .20, .23
+        RoundedRectangle:
+            pos: self.x, self.y - dp(2)
+            size: self.size
+            radius: [dp(16)]
+        Color:
+            rgba: self.sel_color if self.state == 'down' else (.80, .90, .84, 1)
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: [dp(16)]
     canvas.after:
         Color:
-            rgba: (1, 1, 1, 1) if self.icon_tex else (1, 1, 1, 0)
+            rgba: ((1, 1, 1, 1) if self.state == 'down' else (1, 1, 1, .88)) if self.icon_tex else (1, 1, 1, 0)
         Rectangle:
             texture: self.icon_tex
-            pos: (self.center_x - dp(12), self.top - dp(36)) if self.icon_pos == 'top' else (self.x + dp(10), self.center_y - dp(10))
-            size: (dp(24), dp(24)) if self.icon_pos == 'top' else (dp(20), dp(20))
+            pos: (self.center_x - dp(13), self.top - dp(38)) if self.icon_pos == 'top' else (self.x + dp(10), self.center_y - dp(10))
+            size: (dp(26), dp(26)) if self.icon_pos == 'top' else (dp(20), dp(20))
 
 <Swatch>:
     size_hint_y: None
@@ -411,7 +447,7 @@
         icon: 'settings'
         text: 'Settings'
         selected: root.active == 'settings'
-        on_release: app.show_wip('Settings')
+        on_release: app.go('settings')
 
 # =========================================================== 1. GARDEN
 <GardenScreen>:
@@ -1168,9 +1204,21 @@
     spacing: dp(5)
     canvas.before:
         Color:
-            rgba: self.edge_color
+            rgba: (.16, .24, .20, .11) if self.edge_color[3] > 0 else (0, 0, 0, 0)
         RoundedRectangle:
-            pos: self.x, self.y - dp(2)
+            pos: self.x, self.y - dp(3.5)
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: (.16, .24, .20, .17) if self.edge_color[3] > 0 else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(2.5)
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: (.16, .24, .20, .23) if self.edge_color[3] > 0 else (0, 0, 0, 0)
+        RoundedRectangle:
+            pos: self.x, self.y - dp(1.5)
             size: self.size
             radius: [self.height / 2]
         Color:
@@ -1256,12 +1304,12 @@
                         size: dp(48), dp(48)
                         pos_hint: {'center_y': .5}
                         radius: dp(24)
+                        bg_color: MINT_L
                         edge_color: DARK
-                        outline: dp(1.2)
                         padding: dp(10)
                         on_release: app.go('history')
                         Icon:
-                            name: 'close'
+                            name: 'back'
                     Col:
                         pos_hint: {'center_y': .5}
                         spacing: dp(4)
@@ -1269,7 +1317,8 @@
                             text: 'New Care Note'
                             halign: 'center'
                             font_size: sp(22)
-                        Pill:
+                        TagPill:
+                            icon: 'leaf_small'
                             text: 'Cherry Tomato \u2022 Day 42'
                             bg_color: MINT_L
                             edge_color: DARK
@@ -1279,17 +1328,17 @@
                         size: dp(48), dp(48)
                         pos_hint: {'center_y': .5}
                         radius: dp(24)
+                        bg_color: MINT_L
                         edge_color: DARK
-                        outline: dp(1.2)
                         padding: dp(10)
                         Icon:
-                            name: 'bulb'
+                            name: 'gardentip'
                 Row:
                     height: dp(24)
                     spacing: dp(6)
                     padding: dp(6), 0
                     Icon:
-                        name: 'eye'
+                        name: 'view'
                         size: dp(20), dp(20)
                         pos_hint: {'center_y': .5}
                     Sm:
@@ -1411,7 +1460,7 @@
                         spacing: dp(10), dp(14)
                         Chip:
                             text: 'Pruning'
-                            icon: 'pruning'
+                            icon: 'scissors'
                             sel_color: CREAM
                             group: 'activity'
                             state: 'down'
@@ -2057,6 +2106,324 @@
                     bg_color: CREAM
                     outline: dp(1.2)
 
+# =========================================================== 4. SETTINGS
+<ToggleSwitch>:
+    canvas:
+        Color:
+            rgba: (.247, .42, .34, 1) if self.active else (.72, .80, .75, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [self.height / 2]
+        Color:
+            rgba: 1, 1, 1, 1
+        Ellipse:
+            pos: self.x + dp(4) + self.knob * (self.width - self.height), self.y + dp(4)
+            size: self.height - dp(8), self.height - dp(8)
+
+<LinkLabel>:
+    size_hint: None, None
+    size: self.texture_size
+    font_size: sp(13.5)
+    color: MUTED
+    pos_hint: {'center_y': .5}
+    opacity: .6 if self.state == 'down' else 1
+
+<SettingRow>:
+    size_hint_y: None
+    height: dp(62)
+    padding: dp(12), dp(4), dp(10), dp(4)
+    spacing: dp(12)
+    opacity: .65 if (self.state == 'down' and not self.has_switch) else 1
+    canvas.after:
+        Color:
+            rgba: (.76, .84, .79, 1) if self.divider else (0, 0, 0, 0)
+        Rectangle:
+            pos: self.x + dp(10), self.y
+            size: self.width - dp(20), dp(1)
+    Icon:
+        name: root.icon
+        size: dp(26), dp(26)
+        pos_hint: {'center_y': .5}
+    Col:
+        pos_hint: {'center_y': .5}
+        H2:
+            text: root.title
+            font_size: sp(16)
+        Sm:
+            text: root.subtitle
+            font_size: sp(13.5)
+    BoxLayout:
+        size_hint_x: None
+        width: self.minimum_width
+        spacing: dp(4)
+        Label:
+            text: root.value
+            bold: True
+            font_size: sp(14)
+            color: DARK
+            size_hint: None, None
+            size: (self.texture_size[0] + dp(6), self.texture_size[1]) if root.value else (0, 0)
+            pos_hint: {'center_y': .5}
+        Icon:
+            name: 'set_chevron'
+            size: (dp(18), dp(18)) if root.chevron else (0, 0)
+            pos_hint: {'center_y': .5}
+        ToggleSwitch:
+            size_hint: None, None
+            size: (dp(46), dp(28)) if root.has_switch else (0, 0)
+            pos_hint: {'center_y': .5}
+            active: root.active
+
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        TopBar:
+        ScrollView:
+            bar_width: 0
+            do_scroll_x: False
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: dp(16), dp(4), dp(16), dp(24)
+                spacing: dp(18)
+
+                # ---- title
+                Col:
+                    spacing: dp(4)
+                    H1:
+                        text: 'Settings'
+                        font_size: sp(32)
+                        padding: dp(4), 0
+                    Sm:
+                        text: 'A little care for your corner of green.'
+                        font_size: sp(15.5)
+                        padding: dp(4), 0
+
+                # ---- plot pill
+                Card:
+                    bg_color: MINT
+                    edge_color: DARK
+                    radius: dp(30)
+                    padding: dp(14)
+                    Card:
+                        fixed_height: dp(32)
+                        bg_color: .985, .965, .93, 1
+                        radius: dp(16)
+                        padding: dp(16), 0
+                        BoxLayout:
+                            spacing: dp(8)
+                            Icon:
+                                name: 'set_sprout'
+                                size: dp(22), dp(22)
+                                pos_hint: {'center_y': .5}
+                            Txt:
+                                text: app.plot_name
+                                bold: True
+                                font_size: sp(14.5)
+                                pos_hint: {'center_y': .5}
+
+                # ---- plant-care reminders
+                Col:
+                    spacing: dp(10)
+                    H2:
+                        text: 'Plant-care reminders'
+                        font_size: sp(18)
+                        padding: dp(2), 0
+                    Card:
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        radius: dp(30)
+                        padding: dp(10), dp(3)
+                        spacing: 0
+                        SettingRow:
+                            icon: 'set_water'
+                            title: 'Watering & feeding'
+                            subtitle: 'Personalized to your plants'
+                            has_switch: True
+                            chevron: False
+                            active: app.pref_watering
+                            on_active: app.pref_watering = self.active
+                        SettingRow:
+                            icon: 'set_health'
+                            title: 'Plant health alerts'
+                            subtitle: 'Catch changes early'
+                            has_switch: True
+                            chevron: False
+                            active: app.pref_health
+                            on_active: app.pref_health = self.active
+                        SettingRow:
+                            icon: 'set_checkin'
+                            title: 'Daily garden check-in'
+                            subtitle: 'Every day at ' + app.checkin_time
+                            value: 'Edit'
+                            on_release: app.show_wip('Daily garden check-in')
+                        SettingRow:
+                            icon: 'set_quiet'
+                            title: 'Quiet hours'
+                            subtitle: app.quiet_hours
+                            divider: False
+                            on_release: app.show_wip('Quiet hours')
+
+                # ---- connected garden device
+                Col:
+                    spacing: dp(10)
+                    H2:
+                        text: 'Connected garden device'
+                        font_size: sp(18)
+                        padding: dp(2), 0
+                    Card:
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        radius: dp(30)
+                        padding: dp(16)
+                        spacing: dp(12)
+                        Row:
+                            spacing: dp(12)
+                            Circle:
+                                size: dp(44), dp(44)
+                                bg_color: MINT
+                                Icon:
+                                    name: 'set_node'
+                                    size: dp(28), dp(28)
+                            Col:
+                                pos_hint: {'center_y': .5}
+                                H2:
+                                    text: app.node_name
+                                    font_size: sp(19)
+                                Sm:
+                                    text: app.node_synced
+                                    font_size: sp(14.5)
+                            Pill:
+                                text: '\u2022 Live' if app.node_live else '\u2022 Offline'
+                                bg_color: .81, .91, .86, 1
+                                color: .18, .42, .31, 1
+                                font_size: sp(13.5)
+                        Card:
+                            fixed_height: dp(36)
+                            bg_color: .985, .965, .93, 1
+                            radius: dp(18)
+                            padding: dp(14), 0
+                            BoxLayout:
+                                spacing: dp(8)
+                                Icon:
+                                    name: 'set_battery'
+                                    size: dp(22), dp(22)
+                                    pos_hint: {'center_y': .5}
+                                Txt:
+                                    text: 'Battery ' + str(int(app.node_battery)) + '%'
+                                    font_size: sp(14.5)
+                                    pos_hint: {'center_y': .5}
+                                Icon:
+                                    name: 'set_wifi'
+                                    size: dp(22), dp(22)
+                                    pos_hint: {'center_y': .5}
+                                Txt:
+                                    text: app.node_wifi
+                                    font_size: sp(14.5)
+                                    size_hint_x: None
+                                    width: dp(118)
+                                    pos_hint: {'center_y': .5}
+                        Btn:
+                            text: 'Manage device'
+                            icon: 'set_tune'
+                            bg_color: MINT
+                            edge_color: DARK
+                            height: dp(44)
+                            font_size: sp(16)
+                            on_release: app.show_wip('Manage device')
+
+                # ---- app preferences
+                Col:
+                    spacing: dp(10)
+                    H2:
+                        text: 'App preferences'
+                        font_size: sp(18)
+                        padding: dp(2), 0
+                    Card:
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        radius: dp(30)
+                        padding: dp(10), dp(3)
+                        spacing: 0
+                        SettingRow:
+                            icon: 'set_appearance'
+                            title: 'Appearance'
+                            subtitle: 'Light & leafy'
+                            value: app.appearance
+                            on_release: app.show_wip('Appearance')
+                        SettingRow:
+                            icon: 'set_units'
+                            title: 'Measurement units'
+                            subtitle: 'Temperature, water & growth'
+                            value: app.units
+                            on_release: app.show_wip('Measurement units')
+                        SettingRow:
+                            icon: 'set_language'
+                            title: 'Language'
+                            value: app.language
+                            divider: False
+                            on_release: app.show_wip('Language')
+
+                # ---- here to help
+                Col:
+                    spacing: dp(10)
+                    H2:
+                        text: 'Here to help'
+                        font_size: sp(18)
+                        padding: dp(2), 0
+                    Card:
+                        bg_color: MINT_L
+                        edge_color: DARK
+                        radius: dp(30)
+                        padding: dp(10), dp(3)
+                        spacing: 0
+                        SettingRow:
+                            icon: 'set_help'
+                            title: 'Help & growing guides'
+                            subtitle: 'Answers for you and your plants'
+                            on_release: app.show_wip('Help & growing guides')
+                        SettingRow:
+                            icon: 'set_contact'
+                            title: 'Contact Leafora'
+                            subtitle: 'Let\u2019s get growing together'
+                            divider: False
+                            on_release: app.show_wip('Contact Leafora')
+
+                # ---- sign out
+                Btn:
+                    text: 'Sign out'
+                    icon: 'set_signout'
+                    bg_color: CREAM
+                    edge_color: DARK
+                    outline: dp(1.5)
+                    color: .247, .42, .34, 1
+                    height: dp(52)
+                    font_size: sp(19)
+                    on_release: app.sign_out()
+
+                # ---- footer links
+                BoxLayout:
+                    size_hint_y: None
+                    height: dp(24)
+                    spacing: dp(6)
+                    Widget:
+                    LinkLabel:
+                        text: 'Privacy policy'
+                        on_release: app.show_wip('Privacy policy')
+                    Label:
+                        text: '\u00b7'
+                        color: MUTED
+                        size_hint_x: None
+                        width: dp(8)
+                    LinkLabel:
+                        text: 'Terms of service'
+                        on_release: app.show_wip('Terms of service')
+                    Widget:
+        NavBar:
+            active: 'settings'
+
 # ============================================================ work in progress
 <WipScreen>:
     BoxLayout:
@@ -2094,5 +2461,7 @@ RootSM:
         name: 'note_new'
     NoteDetailScreen:
         name: 'note_detail'
+    SettingsScreen:
+        name: 'settings'
     WipScreen:
         name: 'wip'

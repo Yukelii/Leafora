@@ -9,6 +9,7 @@ import os
 import threading
 import time
 
+from kivy.animation import Animation
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
@@ -202,6 +203,36 @@ class NavItem(ButtonBehavior, BoxLayout):
 
 class NavBar(BoxLayout):
     active = StringProperty('garden')
+
+
+class ToggleSwitch(Widget):
+    """Pill switch (dark-green track, white knob). Drawn in leafora.kv."""
+    active = BooleanProperty(False)
+    knob = NumericProperty(0)            # 0 = left, 1 = right (animated)
+
+    def on_active(self, inst, value):
+        Animation.cancel_all(self, 'knob')
+        Animation(knob=1. if value else 0., d=.16, t='out_quad').start(self)
+
+
+class SettingRow(ButtonBehavior, BoxLayout):
+    """One row of a Settings card: icon, title, subtitle, then a value / chevron / switch."""
+    icon = StringProperty('')            # Icons/<icon>.png
+    title = StringProperty('')
+    subtitle = StringProperty('')
+    value = StringProperty('')           # small bold text before the chevron, e.g. 'Light'
+    chevron = BooleanProperty(True)
+    has_switch = BooleanProperty(False)  # True = show the on/off switch instead of a chevron
+    active = BooleanProperty(False)      # the switch state
+    divider = BooleanProperty(True)      # thin line under the row
+
+    def on_release(self):
+        if self.has_switch:
+            self.active = not self.active
+
+
+class LinkLabel(ButtonBehavior, Label):
+    """Small tappable text, e.g. 'Privacy policy'."""
 
 
 class GuideOverlay(Widget):
@@ -578,6 +609,10 @@ class NoteDetailScreen(Screen):
     pass
 
 
+class SettingsScreen(Screen):
+    pass
+
+
 class WipScreen(Screen):
     """Placeholder page for controls that are not built yet."""
     feature = StringProperty('This feature')
@@ -606,6 +641,22 @@ class LeaforaApp(App):
     sensor_temp = NumericProperty(23)
     humidity = NumericProperty(62)
 
+    # Settings screen (the .kv reads these; change them from Python and the UI follows)
+    plot_name = StringProperty('Plot A \u2022 Sunny Balcony')
+    pref_watering = BooleanProperty(True)
+    pref_health = BooleanProperty(True)
+    checkin_time = StringProperty('8:00 AM')
+    quiet_hours = StringProperty('9:00 PM \u2013 7:00 AM')
+    appearance = StringProperty('Light')
+    units = StringProperty('\u00b0C \u00b7 Metric')
+    language = StringProperty('English')
+    # Connected garden device (fill from the ESP32 / backend later)
+    node_name = StringProperty('Plot A node')
+    node_synced = StringProperty('Last synced just now')
+    node_battery = NumericProperty(86)
+    node_wifi = StringProperty('Wi-Fi connected')
+    node_live = BooleanProperty(True)
+
     @property
     def scan_dir(self):
         return os.path.join(self.user_data_dir, 'scans')
@@ -613,12 +664,37 @@ class LeaforaApp(App):
     def on_start(self):
         Window.softinput_mode = 'below_target'      # keyboard pushes the form up
         Window.bind(on_keyboard=self._on_key)
+        self.load_prefs()
         self.refresh_weather()
         Clock.schedule_interval(lambda dt: self.refresh_weather(), 15 * 60)   # every 15 min
         if dummy_sensors.USE_DUMMY_SENSORS:
             self._dummy_feed = dummy_sensors.DummySensorFeed()
             self.refresh_dummy_vitals(0)
             Clock.schedule_interval(self.refresh_dummy_vitals, dummy_sensors.DUMMY_INTERVAL_SECONDS)
+
+    # ---------------------------------------------------------- saved settings
+    def _prefs_store(self):
+        from kivy.storage.jsonstore import JsonStore
+        return JsonStore(os.path.join(self.user_data_dir, 'prefs.json'))
+
+    def load_prefs(self):
+        """Restore the two reminder switches, then start saving them on every change."""
+        try:
+            store = self._prefs_store()
+            if store.exists('toggles'):
+                saved = store.get('toggles')
+                self.pref_watering = bool(saved.get('watering', True))
+                self.pref_health = bool(saved.get('health', True))
+        except Exception as exc:
+            print('PREFS LOAD ERROR:', exc)
+        self.bind(pref_watering=self.save_prefs, pref_health=self.save_prefs)
+
+    def save_prefs(self, *a):
+        try:
+            self._prefs_store().put('toggles', watering=self.pref_watering,
+                                    health=self.pref_health)
+        except Exception as exc:
+            print('PREFS SAVE ERROR:', exc)
 
     def refresh_dummy_vitals(self, dt):
         """Fill the Vitals card with simulated readings (see dummy_sensors.py)."""
@@ -660,6 +736,10 @@ class LeaforaApp(App):
     def go(self, name):
         if self.root.has_screen(name):
             self.root.current = name
+
+    def sign_out(self):
+        """Sign out = close Leafora (desktop window or Android app)."""
+        self.stop()
 
     def show_wip(self, feature):
         self.root.get_screen('wip').feature = feature
